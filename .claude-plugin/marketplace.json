@@ -1,0 +1,20 @@
+{
+  "name": "tdd-dev",
+  "owner": {
+    "name": "Szymon Paluch"
+  },
+  "plugins": [
+    {
+      "name": "tdd-dev",
+      "source": "./",
+      "description": "Transform Claude Code into a strict TDD practitioner that enforces Red→Green→Refactor cycles",
+      "version": "0.1.1",
+      "author": {
+        "name": "Szymon Paluch"
+      },
+      "repository": "https://github.com/hculap/tdd-dev",
+      "license": "MIT",
+      "keywords": ["tdd", "test-driven-development", "testing", "red-green-refactor", "quality"]
+    }
+  ]
+}
