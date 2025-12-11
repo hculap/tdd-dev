@@ -13,11 +13,28 @@ Transform Claude Code from a general code generator into a strict Test-Driven De
 
 ## Installation
 
+### From npm (Recommended)
+
 ```bash
+claude plugin add tdd-dev
+```
+
+### From GitHub
+
+```bash
+claude plugin add github:hculap/tdd-dev
+```
+
+### Manual Installation
+
+Clone and use locally:
+
+```bash
+git clone https://github.com/hculap/tdd-dev.git
 claude --plugin-dir /path/to/tdd-dev
 ```
 
-Or for development/testing:
+For development/testing:
 ```bash
 claude --plugin-dir .
 ```
