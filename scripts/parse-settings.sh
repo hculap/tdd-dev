@@ -47,11 +47,11 @@ extract_setting() {
             next
         }
         in_frontmatter && $0 ~ "^"setting":" {
+            found=1
             # Handle inline value
             sub("^"setting":[ ]*", "")
             if ($0 != "") {
                 print $0
-                found=1
             }
             next
         }

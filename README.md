@@ -145,7 +145,8 @@ The `.tdd-mode-active` file contains:
 {
   "active": true,
   "activatedAt": "2024-01-15T10:30:00Z",
-  "strictness": "strict"
+  "strictness": "strict",
+  "testCommand": "npm test"
 }
 ```
 

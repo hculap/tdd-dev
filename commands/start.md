@@ -7,7 +7,19 @@ allowed-tools: Read, Write, Glob, Grep, Bash, AskUserQuestion
 
 Activate TDD Dev Mode for this session. From now on, apply strict Test-Driven Development practices to all coding requests.
 
-## Step 1: Create TDD Mode Flag File
+## Step 1: Detect Configuration First
+
+Before creating the flag file, detect the test command:
+
+1. **Check for settings file**: Look for `.claude/tdd-dev.local.md` in project root
+2. **Auto-detect test command**:
+   - If `package.json` exists: Use `npm test` or check for vitest/jest in devDependencies
+   - If `pyproject.toml` or `pytest.ini` exists: Use `pytest`
+   - If `go.mod` exists: Use `go test ./...`
+   - Otherwise: Ask user for test command
+3. **Read strictness setting**: Default to `strict` if not configured
+
+## Step 2: Create TDD Mode Flag File
 
 **CRITICAL**: Create the flag file that enables hook enforcement.
 
@@ -18,26 +30,12 @@ Activate TDD Dev Mode for this session. From now on, apply strict Test-Driven De
 {
   "active": true,
   "activatedAt": "[current ISO timestamp]",
-  "strictness": "strict"
+  "strictness": "strict",
+  "testCommand": "[detected or configured test command]"
 }
 ```
 
-This file signals to hooks that TDD mode is active and enforcement should apply.
-
-## Step 2: Configuration Detection
-
-Detect project test configuration:
-
-1. **Check for settings file**: Look for `.claude/tdd-dev.local.md` in project root
-2. **Auto-detect test command**:
-   - If `package.json` exists: Use `npm test` or check for vitest/jest in devDependencies
-   - If `pyproject.toml` or `pytest.ini` exists: Use `pytest`
-   - If `go.mod` exists: Use `go test ./...`
-   - Otherwise: Ask user for test command
-
-3. **Read strictness setting**: Default to `strict` if not configured
-
-4. **Update flag file**: If strictness was configured differently, update `.claude/.tdd-mode-active` with the detected strictness level
+This file signals to hooks that TDD mode is active and stores the detected configuration for use by commands and hooks.
 
 ## Step 3: Session State
 
