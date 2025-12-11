@@ -59,6 +59,7 @@ extract_setting() {
             # Handle list items
             sub("^  - ", "")
             print
+            next
         }
         in_frontmatter && found && /^[^ ]/ && !/^  - / {
             exit

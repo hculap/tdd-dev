@@ -186,7 +186,6 @@ Read settings from `.claude/tdd-dev.local.md`:
 ```yaml
 testCommand: npm test
 strictness: strict
-ensemble: false
 maxIterations: 5
 sourcePatterns:
   - src/**/*.ts
