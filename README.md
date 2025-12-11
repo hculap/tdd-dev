@@ -39,7 +39,6 @@ claude --plugin-dir .
 - `--file <path>` - Target specific test or source file
 - `--plan` - Force planning mode (require approval before test and implementation)
 - `--skip-plan` - Skip planning entirely, execute directly
-- `--ensemble` - Enable ensemble mode for competing patch proposals (experimental)
 
 ### Planning Modes
 
@@ -98,7 +97,6 @@ Create `.claude/tdd-dev.local.md` in your project:
 ---
 testCommand: npm test
 strictness: strict
-ensemble: false
 maxIterations: 5
 sourcePatterns:
   - src/**/*.ts
@@ -123,7 +121,6 @@ Add any project-specific testing conventions here.
 | `testCommand` | Command to run tests | Auto-detected |
 | `strictness` | `strict`, `standard`, or `relaxed` | `strict` |
 | `maxIterations` | Max RED→GREEN cycles before asking | `5` |
-| `ensemble` | Enable ensemble patch mode | `false` |
 | `sourcePatterns` | Globs for source files (hook enforced) | `src/**/*` |
 | `testPatterns` | Globs for test files (always allowed) | `**/*.test.*` |
 

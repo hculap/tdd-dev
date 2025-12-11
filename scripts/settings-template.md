@@ -22,9 +22,6 @@ strictness: strict
 # Maximum Red→Green iterations before asking to continue
 maxIterations: 5
 
-# Enable ensemble mode for competing patch proposals (experimental)
-ensemble: false
-
 # Source file patterns (hook enforcement applies to these)
 sourcePatterns:
   - src/**/*.ts
@@ -93,12 +90,6 @@ Controls how strictly TDD rules are enforced:
 
 Number of Red→Green cycles before the agent pauses and asks to continue.
 Default: 5
-
-### ensemble
-
-When enabled, the agent may propose multiple competing implementations
-and select the best one based on test results. Experimental feature.
-Default: false
 
 ### sourcePatterns
 
