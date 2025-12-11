@@ -37,7 +37,23 @@ claude --plugin-dir .
 - `--strict` / `--standard` / `--relaxed` - Override strictness for this command
 - `--no-refactor` - Skip refactor phase, stop after green
 - `--file <path>` - Target specific test or source file
+- `--plan` - Force planning mode (require approval before test and implementation)
+- `--skip-plan` - Skip planning entirely, execute directly
 - `--ensemble` - Enable ensemble mode for competing patch proposals (experimental)
+
+### Planning Modes
+
+By default, commands will ask if you want to review and approve plans before execution. You can control this behavior:
+
+| Flag | Behavior |
+|------|----------|
+| `--plan` | Always show plan and require approval before each phase |
+| `--skip-plan` | Skip planning, execute directly without approval |
+| (default) | Ask user whether to use planning mode |
+
+When planning is enabled, the agent will enter Claude Code's native plan mode before:
+1. **Test Phase**: Shows planned test structure and assertions
+2. **Implementation Phase**: Shows planned code changes and files to modify
 
 ## Strictness Modes
 

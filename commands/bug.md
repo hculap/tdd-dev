@@ -1,7 +1,7 @@
 ---
 description: Fix a bug with regression test first
-argument-hint: "<bug description>" [--strict|--standard|--relaxed] [--no-refactor] [--file <path>]
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, TodoWrite, AskUserQuestion
+argument-hint: "<bug description>" [--strict|--standard|--relaxed] [--no-refactor] [--file <path>] [--plan|--skip-plan]
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, TodoWrite, AskUserQuestion, EnterPlanMode
 ---
 
 # TDD Bug Fix
@@ -15,6 +15,8 @@ Extract from arguments:
 - **--strict / --standard / --relaxed**: Override strictness mode (optional)
 - **--no-refactor**: Skip refactor phase after green (optional)
 - **--file <path>**: Target specific file (optional)
+- **--plan**: Force planning mode (require approval before test and fix)
+- **--skip-plan**: Skip planning entirely, execute directly
 
 ## Pre-Flight Checks
 
@@ -22,6 +24,50 @@ Extract from arguments:
 2. **Determine strictness**: Use flag override > settings > default (strict)
 3. **Detect test command**: From settings or auto-detect
 4. **Locate bug**: Find the code responsible for the bug
+
+## Plan Mode Decision
+
+Determine planning behavior based on flags:
+
+1. **If `--skip-plan` flag**: Skip all planning, proceed directly to TDD loop
+2. **If `--plan` flag**: Force planning before both RED and GREEN phases
+3. **If neither flag (default)**: Ask user using AskUserQuestion:
+   - "Would you like to review and approve the regression test plan before I write tests?"
+   - Options: "Yes, show me the plan" / "No, proceed directly"
+   - Store response for consistent behavior in GREEN phase
+
+## Regression Test Planning Phase (unless --skip-plan)
+
+If planning is enabled (via `--plan` flag or user choice):
+
+1. **Enter plan mode**: Use EnterPlanMode tool
+2. **Analyze the bug**:
+   - What is the incorrect behavior?
+   - How can we reproduce it in a test?
+   - What should the correct behavior be?
+3. **Write regression test plan** to plan file including:
+   - Test file location
+   - Test case that reproduces the bug
+   - Expected vs actual behavior
+   - Assertions that will fail due to bug
+4. **Exit plan mode**: Wait for user approval via ExitPlanMode
+5. **Proceed to RED phase** only after approval
+
+## Bug Fix Planning Phase (unless --skip-plan)
+
+After RED phase succeeds and before GREEN phase, if planning is enabled:
+
+1. **Enter plan mode**: Use EnterPlanMode tool
+2. **Analyze root cause**:
+   - What code is causing the bug?
+   - What's the minimal fix?
+   - Are there any side effects to consider?
+3. **Write fix plan** to plan file including:
+   - Files to modify
+   - Specific changes to make
+   - Minimal fix strategy (no scope creep)
+4. **Exit plan mode**: Wait for user approval via ExitPlanMode
+5. **Proceed to GREEN phase** only after approval
 
 ## Bug Analysis
 

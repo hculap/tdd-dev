@@ -1,7 +1,7 @@
 ---
 description: Implement a new feature using full TDD loop
-argument-hint: "<feature description>" [--strict|--standard|--relaxed] [--no-refactor] [--file <path>]
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, TodoWrite, AskUserQuestion
+argument-hint: "<feature description>" [--strict|--standard|--relaxed] [--no-refactor] [--file <path>] [--plan|--skip-plan]
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, TodoWrite, AskUserQuestion, EnterPlanMode
 ---
 
 # TDD Feature Implementation
@@ -15,6 +15,8 @@ Extract from arguments:
 - **--strict / --standard / --relaxed**: Override strictness mode (optional)
 - **--no-refactor**: Skip refactor phase after green (optional)
 - **--file <path>**: Target specific file for tests/implementation (optional)
+- **--plan**: Force planning mode (require approval before test and implementation)
+- **--skip-plan**: Skip planning entirely, execute directly
 
 ## Pre-Flight Checks
 
@@ -22,6 +24,51 @@ Extract from arguments:
 2. **Determine strictness**: Use flag override > settings > default (strict)
 3. **Detect test command**: From settings or auto-detect from project files
 4. **Identify test location**: Find appropriate test file or create new one
+
+## Plan Mode Decision
+
+Determine planning behavior based on flags:
+
+1. **If `--skip-plan` flag**: Skip all planning, proceed directly to TDD loop
+2. **If `--plan` flag**: Force planning before both RED and GREEN phases
+3. **If neither flag (default)**: Ask user using AskUserQuestion:
+   - "Would you like to review and approve the test plan before I write tests?"
+   - Options: "Yes, show me the plan" / "No, proceed directly"
+   - Store response for consistent behavior in GREEN phase
+
+## Test Planning Phase (unless --skip-plan)
+
+If planning is enabled (via `--plan` flag or user choice):
+
+1. **Enter plan mode**: Use EnterPlanMode tool
+2. **Analyze requirements**:
+   - What behaviors need testing for this feature?
+   - What edge cases should be covered?
+   - What test structure fits the project best?
+3. **Write test plan** to plan file including:
+   - Test file location
+   - Test cases to write (describe/it structure)
+   - Expected assertions for each test
+   - Mocking strategy if external dependencies involved
+4. **Exit plan mode**: Wait for user approval via ExitPlanMode
+5. **Proceed to RED phase** only after approval
+
+## Implementation Planning Phase (unless --skip-plan)
+
+After RED phase succeeds and before GREEN phase, if planning is enabled:
+
+1. **Enter plan mode**: Use EnterPlanMode tool
+2. **Analyze failing tests**:
+   - What's the minimal code to make tests pass?
+   - What dependencies are needed?
+   - What files need creation or modification?
+3. **Write implementation plan** to plan file including:
+   - Files to create/modify
+   - Functions/classes to implement
+   - Dependencies to add (if any)
+   - Minimal implementation strategy (no over-engineering)
+4. **Exit plan mode**: Wait for user approval via ExitPlanMode
+5. **Proceed to GREEN phase** only after approval
 
 ## TDD Loop Execution
 

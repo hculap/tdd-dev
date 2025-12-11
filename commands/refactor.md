@@ -1,7 +1,7 @@
 ---
 description: Safe refactoring verified by existing tests
-argument-hint: "<target>" [--strict|--standard|--relaxed] [--file <path>]
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, TodoWrite, AskUserQuestion
+argument-hint: "<target>" [--strict|--standard|--relaxed] [--file <path>] [--plan|--skip-plan]
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, TodoWrite, AskUserQuestion, EnterPlanMode
 ---
 
 # TDD Safe Refactor
@@ -17,6 +17,8 @@ Extract from arguments:
   - Description: `extract validation logic`
 - **--strict / --standard / --relaxed**: Override strictness mode (optional)
 - **--file <path>**: Target specific file (optional, overrides target parsing)
+- **--plan**: Force planning mode (require approval before refactoring)
+- **--skip-plan**: Skip planning entirely, execute directly
 
 ## Target Resolution
 
@@ -36,6 +38,33 @@ Resolve the refactor target:
    - Analyze description to identify target code
    - Search for relevant patterns
    - Confirm understanding with user
+
+## Plan Mode Decision
+
+Determine planning behavior based on flags:
+
+1. **If `--skip-plan` flag**: Skip planning, proceed directly to refactoring
+2. **If `--plan` flag**: Force planning before refactoring
+3. **If neither flag (default)**: Ask user using AskUserQuestion:
+   - "Would you like to review and approve the refactoring plan before I start?"
+   - Options: "Yes, show me the plan" / "No, proceed directly"
+
+## Refactoring Planning Phase (unless --skip-plan)
+
+If planning is enabled (via `--plan` flag or user choice):
+
+1. **Enter plan mode**: Use EnterPlanMode tool
+2. **Analyze the target code**:
+   - What code smells or issues exist?
+   - What refactoring transformations apply?
+   - What tests cover this code?
+3. **Write refactoring plan** to plan file including:
+   - Target files and symbols
+   - Proposed refactoring steps (in order)
+   - Expected benefits of each change
+   - Relevant test coverage
+4. **Exit plan mode**: Wait for user approval via ExitPlanMode
+5. **Proceed to refactoring** only after approval
 
 ## Pre-Refactor Verification
 
