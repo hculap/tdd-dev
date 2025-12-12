@@ -8,7 +8,7 @@
       "name": "tdd-dev",
       "source": "./",
       "description": "Transform Claude Code into a strict TDD practitioner that enforces Red→Green→Refactor cycles",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "author": {
         "name": "Szymon Paluch"
       },

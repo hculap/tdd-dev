@@ -90,14 +90,16 @@ When you run `/tdd-dev:start`:
 ### The TDD Loop
 
 1. **Enable TDD Mode**: Run `/tdd-dev:start`
-2. **Request a Feature**: "Add pagination to the user list"
-3. **Agent Takes Over**:
+2. **Use TDD Commands**: `/tdd-dev:feature "Add pagination to the user list"`
+3. **Agent Executes TDD**:
    - Writes a failing test for the requested behavior (RED)
    - Runs tests, confirms failure
    - Implements minimal code to pass (GREEN)
    - Runs tests, confirms pass
    - Optionally refactors while keeping tests green (REFACTOR)
 4. **Iterate**: If tests still fail, the agent iterates (up to configured limit)
+
+**Note**: For guaranteed TDD enforcement, use the explicit commands (`/tdd-dev:feature`, `/tdd-dev:bug`, `/tdd-dev:refactor`). The TDD agent may also be triggered for plain requests when TDD mode is active, but this depends on Claude's judgment. Hooks provide additional enforcement by blocking source file writes without failing tests in strict mode.
 
 ### Disabling TDD Mode
 
