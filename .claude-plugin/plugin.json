@@ -1,9 +1,10 @@
 {
   "name": "tdd-dev",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Transform Claude Code into a strict TDD practitioner that enforces Red→Green→Refactor cycles",
   "author": {
     "name": "Szymon Paluch"
   },
-  "keywords": ["tdd", "test-driven-development", "testing", "red-green-refactor", "quality"]
+  "keywords": ["tdd", "test-driven-development", "testing", "red-green-refactor", "quality"],
+  "hooks": "./hooks/hooks.json"
 }

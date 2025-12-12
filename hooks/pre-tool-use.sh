@@ -56,7 +56,7 @@ fi
 STATE_FILE=".claude/.tdd-cycle-state"
 if [ ! -f "$STATE_FILE" ]; then
   if [ "$STRICTNESS" = "strict" ]; then
-    echo "TDD BLOCKED: No cycle state file. Write a test first, then run tests to establish the RED phase."
+    echo "TDD BLOCKED: No cycle state file. Write a test first, then run tests to establish the RED phase." >&2
     exit 2  # Block
   fi
   exit 0  # Allow in non-strict modes
@@ -70,22 +70,22 @@ case "$PHASE" in
     ;;
   "red")
     if [ "$STRICTNESS" = "strict" ]; then
-      echo "TDD BLOCKED: Phase is RED. You must:"
-      echo "  1. Write a failing test"
-      echo "  2. Run the tests to confirm they fail"
-      echo "  3. Then implement the source code"
+      echo "TDD BLOCKED: Phase is RED. You must:" >&2
+      echo "  1. Write a failing test" >&2
+      echo "  2. Run the tests to confirm they fail" >&2
+      echo "  3. Then implement the source code" >&2
       exit 2  # Block in strict mode
     elif [ "$STRICTNESS" = "standard" ]; then
-      echo "TDD Warning: Phase is RED - no failing test confirmed yet."
+      echo "TDD Warning: Phase is RED - no failing test confirmed yet." >&2
       exit 0  # Allow but warn in standard mode
     else
-      echo "TDD Tip: Consider running your test first to confirm it fails."
+      echo "TDD Tip: Consider running your test first to confirm it fails." >&2
       exit 0  # Allow in relaxed mode
     fi
     ;;
   "idle"|*)
     if [ "$STRICTNESS" = "strict" ]; then
-      echo "TDD BLOCKED: TDD cycle not started. Use /tdd-dev:feature or /tdd-dev:bug to begin."
+      echo "TDD BLOCKED: TDD cycle not started. Use /tdd-dev:feature or /tdd-dev:bug to begin." >&2
       exit 2  # Block in strict mode
     fi
     exit 0  # Allow in non-strict modes

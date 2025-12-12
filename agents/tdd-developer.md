@@ -72,8 +72,7 @@ No exceptions. Even "simple" changes use TDD when the mode is active. The agent 
 </example>
 
 model: inherit
-color: green
-tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash", "TodoWrite", "AskUserQuestion", "EnterPlanMode"]
+tools: Read, Write, Edit, Glob, Grep, Bash, TodoWrite, AskUserQuestion, EnterPlanMode, ExitPlanMode
 ---
 
 ## CRITICAL: First Action Required
