@@ -24,6 +24,11 @@ Extract from arguments:
 2. **Determine strictness**: Use flag override > settings > default (strict)
 3. **Detect test command**: From settings or auto-detect
 4. **Locate bug**: Find the code responsible for the bug
+5. **Reset TDD cycle state**: Create/update `.claude/.tdd-cycle-state` to start fresh RED phase:
+   ```json
+   {"phase": "red", "testFilesWritten": [], "testsRan": false, "testsFailed": false}
+   ```
+   This ensures hooks enforce "write regression test first" for this bug fix.
 
 ## Plan Mode Decision
 

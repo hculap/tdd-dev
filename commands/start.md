@@ -37,6 +37,30 @@ Before creating the flag file, detect the test command:
 
 This file signals to hooks that TDD mode is active and stores the detected configuration for use by commands and hooks.
 
+## Step 2.5: Initialize TDD Cycle State
+
+**CRITICAL**: Create the cycle state file that tracks TDD phases.
+
+Create `.claude/.tdd-cycle-state` with the following JSON content:
+
+```json
+{
+  "phase": "red",
+  "testFilesWritten": [],
+  "testsRan": false,
+  "testsFailed": false
+}
+```
+
+This file tracks the current TDD phase:
+- **red**: Waiting for failing test to be written and run
+- **green**: Test failed, now implement to make it pass
+- **refactor**: Tests passing, safe to refactor
+
+The hooks use this file to enforce the TDD cycle:
+- PreToolUse (Write|Edit) blocks source file edits unless phase is "green" or "refactor"
+- PostToolUse (Bash) detects test runs and transitions phases automatically
+
 ## Step 3: Session State
 
 Set the following TDD mode state:

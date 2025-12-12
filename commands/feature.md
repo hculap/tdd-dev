@@ -24,6 +24,11 @@ Extract from arguments:
 2. **Determine strictness**: Use flag override > settings > default (strict)
 3. **Detect test command**: From settings or auto-detect from project files
 4. **Identify test location**: Find appropriate test file or create new one
+5. **Reset TDD cycle state**: Create/update `.claude/.tdd-cycle-state` to start fresh RED phase:
+   ```json
+   {"phase": "red", "testFilesWritten": [], "testsRan": false, "testsFailed": false}
+   ```
+   This ensures hooks enforce "write test first" for this new feature.
 
 ## Plan Mode Decision
 
