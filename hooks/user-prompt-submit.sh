@@ -2,6 +2,9 @@
 # TDD UserPromptSubmit Hook - Injects TDD context when mode is active
 # Exit codes: 0 = allow (always), output JSON to add context
 
+# Check jq dependency - allow if not available
+command -v jq >/dev/null 2>&1 || exit 0
+
 # Check if TDD mode is active
 TDD_ACTIVE_FILE=".claude/.tdd-mode-active"
 if [ ! -f "$TDD_ACTIVE_FILE" ]; then
