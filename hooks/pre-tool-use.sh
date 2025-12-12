@@ -31,26 +31,35 @@ STRICTNESS=$(jq -r '.strictness // "strict"' "$TDD_ACTIVE_FILE" 2>/dev/null || e
 # Check if this is a test file (allow test files always)
 # Common test file patterns
 if [[ "$FILE_PATH" =~ \.(test|spec)\. ]] || \
+   [[ "$FILE_PATH" =~ \.stories\. ]] || \
+   [[ "$FILE_PATH" =~ \.e2e\. ]] || \
    [[ "$FILE_PATH" =~ __tests__/ ]] || \
+   [[ "$FILE_PATH" =~ __mocks__/ ]] || \
    [[ "$FILE_PATH" =~ /tests?/ ]] || \
+   [[ "$FILE_PATH" =~ cypress/ ]] || \
+   [[ "$FILE_PATH" =~ playwright/ ]] || \
    [[ "$FILE_PATH" =~ _test\. ]] || \
    [[ "$FILE_PATH" =~ test_.*\. ]] || \
    [[ "$FILE_PATH" =~ \.test$ ]] || \
    [[ "$FILE_PATH" =~ \.spec$ ]]; then
-  # Update state: test file written (with file locking)
+  # Update state: test file written (with portable file locking)
   STATE_FILE=".claude/.tdd-cycle-state"
+  LOCK_DIR="$STATE_FILE.lock"
   if [ -f "$STATE_FILE" ]; then
-    (
-      flock -w 5 200 || exit 0
+    # Portable locking using mkdir (atomic on all POSIX systems, works on macOS)
+    if mkdir "$LOCK_DIR" 2>/dev/null; then
+      trap "rmdir '$LOCK_DIR' 2>/dev/null" EXIT
       jq --arg path "$FILE_PATH" '.testFilesWritten += [$path] | .testFilesWritten |= unique' "$STATE_FILE" > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
-    ) 200>"$STATE_FILE.lock" 2>/dev/null || true
+      rmdir "$LOCK_DIR" 2>/dev/null
+      trap - EXIT
+    fi
   fi
   exit 0  # Allow test file writes
 fi
 
 # Check if it's a non-source file (config, docs, etc.) - allow these
-# Allow: .json, .md, .yml, .yaml, .toml, .lock, .gitignore, etc.
-if [[ "$FILE_PATH" =~ \.(json|md|yml|yaml|toml|lock|gitignore|env|txt|csv|xml|html|css|scss|less)$ ]] || \
+# Note: .env, .html, .css excluded as they can be source files in frontend projects
+if [[ "$FILE_PATH" =~ \.(json|md|yml|yaml|toml|lock|gitignore|txt|csv|xml)$ ]] || \
    [[ "$FILE_PATH" =~ /\. ]] || \
    [[ "$FILE_PATH" =~ ^\.claude/ ]]; then
   exit 0  # Allow config/doc files

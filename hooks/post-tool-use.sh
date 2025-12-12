@@ -54,14 +54,23 @@ if ! [[ "$COMMAND" =~ (npm[[:space:]]+(run[[:space:]]+)?test|npx[[:space:]]+(jes
 fi
 
 STATE_FILE=".claude/.tdd-cycle-state"
+LOCK_DIR="$STATE_FILE.lock"
 
-# Helper function for atomic state file updates with locking
+# Helper function for atomic state file updates with portable locking
+# Uses mkdir (atomic on all POSIX systems, works on macOS)
 update_state() {
   local jq_filter="$1"
-  (
-    flock -w 5 200 || return 1
-    jq "$jq_filter" "$STATE_FILE" > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
-  ) 200>"$STATE_FILE.lock" 2>/dev/null
+  local i=0
+  # Try to acquire lock with timeout
+  while ! mkdir "$LOCK_DIR" 2>/dev/null; do
+    sleep 0.1
+    i=$((i + 1))
+    if [ $i -ge 50 ]; then  # 5 second timeout
+      return 1
+    fi
+  done
+  jq "$jq_filter" "$STATE_FILE" > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
+  rmdir "$LOCK_DIR" 2>/dev/null
 }
 
 if [ ! -f "$STATE_FILE" ]; then
