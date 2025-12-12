@@ -121,7 +121,12 @@ sourcePatterns:
 testPatterns:
   - "**/*.test.*"
   - "**/*.spec.*"
+  - "**/*.stories.*"
+  - "**/*.e2e.*"
   - "**/__tests__/**"
+  - "**/__mocks__/**"
+  - cypress/**
+  - playwright/**
   - tests/**
 ---
 
@@ -138,7 +143,7 @@ Add any project-specific testing conventions here.
 | `strictness` | `strict`, `standard`, or `relaxed` | `strict` |
 | `maxIterations` | Max RED→GREEN cycles before asking | `5` |
 | `sourcePatterns` | Globs for source files (hook enforced) | `src/**/*` |
-| `testPatterns` | Globs for test files (always allowed) | `**/*.test.*` |
+| `testPatterns` | Globs for test files (always allowed) | `*.test.*`, `*.spec.*`, `*.stories.*`, `*.e2e.*`, `cypress/`, `playwright/` |
 
 ### Global Settings
 
@@ -150,7 +155,8 @@ Project settings override global settings. Command flags override both.
 ```
 .claude/
 ├── tdd-dev.local.md      # Project settings (optional)
-└── .tdd-mode-active      # Flag file (created by /tdd-dev:start)
+├── .tdd-mode-active      # Flag file (created by /tdd-dev:start)
+└── .tdd-cycle-state      # TDD phase tracking (red/green/refactor)
 ```
 
 The `.tdd-mode-active` file contains:
@@ -167,8 +173,9 @@ The `.tdd-mode-active` file contains:
 
 The plugin includes hooks that:
 
-1. **PreToolUse (Write|Edit)**: Validates source file writes against TDD rules
-2. **Stop**: Verifies TDD cycle was followed before task completion
+1. **UserPromptSubmit**: Injects TDD context for every user prompt when mode is active
+2. **PreToolUse (Write|Edit)**: Validates source file writes against TDD rules
+3. **PostToolUse (Bash)**: Detects test runs and manages TDD phase transitions (RED→GREEN→REFACTOR)
 
 Hooks only activate when `.claude/.tdd-mode-active` exists and `active` is `true`.
 
