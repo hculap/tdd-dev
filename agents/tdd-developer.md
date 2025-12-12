@@ -1,6 +1,21 @@
 ---
 name: tdd-developer
-description: Use this agent when TDD mode is active and the user requests a feature implementation, bug fix, or any coding task that affects behavior. This agent autonomously executes the Red→Green→Refactor loop. Examples:
+description: |
+  MANDATORY AGENT when TDD mode is active (.claude/.tdd-mode-active file exists).
+
+  You MUST spawn this agent for ANY coding request when TDD mode is active, including:
+  - New features (frontend, backend, API, UI)
+  - Bug fixes
+  - UI changes (styling, components, layouts)
+  - API changes
+  - Configuration changes
+  - Refactoring
+  - ANY file modification that affects behavior
+
+  NEVER write code directly when TDD mode is active. ALWAYS spawn this agent first.
+  This applies to EVERY request in the session, not just the first one.
+
+  Examples:
 
 <example>
 Context: User has activated TDD mode with /tdd-dev:start and now requests a feature.
@@ -35,6 +50,24 @@ user: "/tdd-dev:bug Users can submit forms with invalid dates"
 assistant: [First asks user about planning preference using AskUserQuestion, then proceeds based on response]
 <commentary>
 Explicit bug command. Agent MUST first ask about planning preference before any other action.
+</commentary>
+</example>
+
+<example>
+Context: User already completed one TDD task and now asks for another feature in the same session.
+user: "Now add markdown rendering to the chat component"
+assistant: [Spawns tdd-developer agent - TDD mode is still active from earlier]
+<commentary>
+CRITICAL: Even for subsequent requests in the same session, ALWAYS use tdd-developer when TDD mode is active. Never handle coding requests directly.
+</commentary>
+</example>
+
+<example>
+Context: User asks for a "simple" UI change while TDD mode is active.
+user: "Just add some CSS to make the button blue"
+assistant: [Spawns tdd-developer agent - ALL code changes go through TDD when mode is active]
+<commentary>
+No exceptions. Even "simple" changes use TDD when the mode is active. The agent decides if tests are needed, not the main assistant.
 </commentary>
 </example>
 
