@@ -2,17 +2,34 @@
 # TDD PostToolUse Hook - Detects test runs and updates cycle state
 # Exit codes: 0 = always (PostToolUse cannot block)
 
-# Don't use set -e as we want to continue even if jq fails
+# Check jq dependency - allow if not available
+command -v jq >/dev/null 2>&1 || exit 0
+
+# Read JSON input from stdin
 INPUT=$(cat)
 
 # Parse input - per Claude Code docs, PostToolUse receives:
 # { "tool_name": "...", "tool_input": {...}, "tool_response": {...}, "tool_use_id": "..." }
-TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty')
-COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
+TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null)
+COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
 
-# tool_response for Bash contains the output - it may be a string or object
-# Try to extract output from various possible formats
-TOOL_RESPONSE=$(echo "$INPUT" | jq -r '.tool_response // empty')
+# tool_response for Bash contains the output - try multiple formats
+# Format 1: Direct string response
+TOOL_RESPONSE=$(echo "$INPUT" | jq -r '.tool_response // empty' 2>/dev/null)
+
+# Format 2: If tool_response is an object, try to get stdout/output fields
+if [ -z "$TOOL_RESPONSE" ] || [ "$TOOL_RESPONSE" = "null" ]; then
+  TOOL_RESPONSE=$(echo "$INPUT" | jq -r '.tool_response.stdout // .tool_response.output // .tool_response.content // empty' 2>/dev/null)
+fi
+
+# Format 3: Try to stringify the entire tool_response if it's an object
+if [ -z "$TOOL_RESPONSE" ] || [ "$TOOL_RESPONSE" = "null" ]; then
+  TOOL_RESPONSE=$(echo "$INPUT" | jq -r 'if .tool_response | type == "object" then (.tool_response | tostring) else empty end' 2>/dev/null)
+fi
+
+# Extract exit code from tool_response (Bash tool includes exit status)
+# Try multiple field names: exitCode, exit_code, code
+EXIT_CODE=$(echo "$INPUT" | jq -r '.tool_response.exitCode // .tool_response.exit_code // .tool_response.code // empty' 2>/dev/null)
 
 # Check if TDD mode is active
 TDD_ACTIVE_FILE=".claude/.tdd-mode-active"
@@ -37,45 +54,64 @@ if ! [[ "$COMMAND" =~ (npm[[:space:]]+(run[[:space:]]+)?test|npx[[:space:]]+(jes
 fi
 
 STATE_FILE=".claude/.tdd-cycle-state"
+
+# Helper function for atomic state file updates with locking
+update_state() {
+  local jq_filter="$1"
+  (
+    flock -w 5 200 || return 1
+    jq "$jq_filter" "$STATE_FILE" > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
+  ) 200>"$STATE_FILE.lock" 2>/dev/null
+}
+
 if [ ! -f "$STATE_FILE" ]; then
   # Create initial state if it doesn't exist
   echo '{"phase":"red","testFilesWritten":[],"testsRan":false,"testsFailed":false}' > "$STATE_FILE"
 fi
 
-CURRENT_PHASE=$(jq -r '.phase // "red"' "$STATE_FILE")
+CURRENT_PHASE=$(jq -r '.phase // "red"' "$STATE_FILE" 2>/dev/null || echo "red")
 
-# Determine if tests passed or failed from tool_response
-# The response contains the actual output from the test command
+# Determine if tests passed or failed
+# Primary: Use exit code (non-zero = failure)
+# Fallback: Output heuristics (for cases where exit code is unavailable)
 TESTS_FAILED=false
 
-# Check for failure patterns in tool_response
-if echo "$TOOL_RESPONSE" | grep -qiE "(FAIL[[:space:]]|FAILED|✗|✘|AssertionError|expect.*received|Expected.*Received|[1-9][0-9]* (failed|failures)|error:|Error:|not ok)"; then
+# Primary check: Exit code from Bash tool
+if [ -n "$EXIT_CODE" ] && [ "$EXIT_CODE" != "null" ] && [ "$EXIT_CODE" != "0" ]; then
   TESTS_FAILED=true
-fi
+elif [ -n "$EXIT_CODE" ] && [ "$EXIT_CODE" = "0" ]; then
+  TESTS_FAILED=false
+else
+  # Fallback: Output heuristics when exit code is unavailable
+  # Check for failure patterns in tool_response
+  if echo "$TOOL_RESPONSE" | grep -qiE "(FAIL[[:space:]]|FAILED|✗|✘|AssertionError|expect.*received|Expected.*Received|[1-9][0-9]* (failed|failures)|error:|Error:|not ok)"; then
+    TESTS_FAILED=true
+  fi
 
-# Check for explicit pass signals that override
-if echo "$TOOL_RESPONSE" | grep -qiE "(All tests passed|0 failures|0 failed|Tests:[[:space:]]+[0-9]+[[:space:]]+passed,[[:space:]]+0[[:space:]]+failed)"; then
-  # Only if no clear failure indicators
-  if ! echo "$TOOL_RESPONSE" | grep -qE "^[[:space:]]*(FAIL|FAILED)[[:space:]]"; then
-    TESTS_FAILED=false
+  # Check for explicit pass signals that override
+  if echo "$TOOL_RESPONSE" | grep -qiE "(All tests passed|0 failures|0 failed|Tests:[[:space:]]+[0-9]+[[:space:]]+passed,[[:space:]]+0[[:space:]]+failed)"; then
+    # Only if no clear failure indicators
+    if ! echo "$TOOL_RESPONSE" | grep -qE "^[[:space:]]*(FAIL|FAILED)[[:space:]]"; then
+      TESTS_FAILED=false
+    fi
   fi
 fi
 
-# Update state
-jq --argjson failed "$TESTS_FAILED" '.testsRan = true | .testsFailed = $failed' "$STATE_FILE" > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
+# Update state with locking
+update_state ".testsRan = true | .testsFailed = $TESTS_FAILED"
 
 # Phase transitions and output proper JSON with additionalContext
 CONTEXT_MSG=""
 if [ "$CURRENT_PHASE" = "red" ] && [ "$TESTS_FAILED" = "true" ]; then
-  jq '.phase = "green"' "$STATE_FILE" > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
+  update_state '.phase = "green"'
   CONTEXT_MSG="TDD Phase: RED → GREEN. Tests failed as expected. You can now implement the minimal code to make them pass."
 elif [ "$CURRENT_PHASE" = "green" ] && [ "$TESTS_FAILED" = "false" ]; then
-  jq '.phase = "refactor"' "$STATE_FILE" > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
+  update_state '.phase = "refactor"'
   CONTEXT_MSG="TDD Phase: GREEN → REFACTOR. Tests passed! You can now optionally refactor while keeping tests green."
 elif [ "$CURRENT_PHASE" = "green" ] && [ "$TESTS_FAILED" = "true" ]; then
   CONTEXT_MSG="TDD Phase: GREEN (tests still failing). Keep implementing until tests pass."
 elif [ "$CURRENT_PHASE" = "refactor" ] && [ "$TESTS_FAILED" = "true" ]; then
-  jq '.phase = "green"' "$STATE_FILE" > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
+  update_state '.phase = "green"'
   CONTEXT_MSG="TDD Phase: REFACTOR → GREEN (regression!). Refactoring broke tests. Fix them before continuing."
 fi
 

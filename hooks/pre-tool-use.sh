@@ -2,11 +2,12 @@
 # TDD PreToolUse Hook - Validates Write/Edit operations
 # Exit codes: 0 = approve, 2 = block, 1 = error
 
-set -e
+# Check jq dependency - allow if not available
+command -v jq >/dev/null 2>&1 || exit 0
 
 # Read JSON input from stdin
 INPUT=$(cat)
-FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
+FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
 
 # If no file path, allow (might be a different tool input format)
 if [ -z "$FILE_PATH" ]; then
@@ -36,10 +37,13 @@ if [[ "$FILE_PATH" =~ \.(test|spec)\. ]] || \
    [[ "$FILE_PATH" =~ test_.*\. ]] || \
    [[ "$FILE_PATH" =~ \.test$ ]] || \
    [[ "$FILE_PATH" =~ \.spec$ ]]; then
-  # Update state: test file written
+  # Update state: test file written (with file locking)
   STATE_FILE=".claude/.tdd-cycle-state"
   if [ -f "$STATE_FILE" ]; then
-    jq --arg path "$FILE_PATH" '.testFilesWritten += [$path] | .testFilesWritten |= unique' "$STATE_FILE" > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
+    (
+      flock -w 5 200 || exit 0
+      jq --arg path "$FILE_PATH" '.testFilesWritten += [$path] | .testFilesWritten |= unique' "$STATE_FILE" > "$STATE_FILE.tmp" && mv "$STATE_FILE.tmp" "$STATE_FILE"
+    ) 200>"$STATE_FILE.lock" 2>/dev/null || true
   fi
   exit 0  # Allow test file writes
 fi
