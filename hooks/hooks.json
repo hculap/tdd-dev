@@ -1,6 +1,18 @@
 {
   "description": "TDD enforcement hooks - validates that behavior-changing code has failing tests first",
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Check if TDD mode is active and inject agent requirement.\n\n**Step 1: Check TDD mode**\n\nLook for `.claude/.tdd-mode-active` file. If it doesn't exist or `active` is false:\n- Return: {\"decision\": \"approve\", \"reason\": \"TDD mode not active.\"}\n\n**Step 2: Inject TDD agent requirement**\n\nIf TDD mode is active, return:\n{\n  \"decision\": \"approve\",\n  \"reason\": \"TDD mode is active.\",\n  \"systemMessage\": \"CRITICAL: TDD mode is ACTIVE. You MUST use the Task tool with subagent_type='tdd-developer' for ANY coding request (features, bugs, refactors, UI changes, API changes). Do NOT write code directly. Do NOT start reading files to implement. FIRST spawn the tdd-developer agent. This is MANDATORY - no exceptions.\"\n}\n\n**Response Format:**\nReturn JSON with decision, reason, and systemMessage (when TDD active).",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Write|Edit",
