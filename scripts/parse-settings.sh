@@ -68,7 +68,7 @@ extract_setting() {
 }
 
 # Try project settings first
-value=$(extract_setting "$PROJECT_SETTINGS" "$SETTING_NAME")
+value=$(extract_setting "$PROJECT_SETTINGS" "$SETTING_NAME" || true)
 
 # If not found in project, try global
 if [ -z "$value" ] && [ -f "$GLOBAL_SETTINGS" ]; then

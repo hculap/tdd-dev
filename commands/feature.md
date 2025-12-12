@@ -1,7 +1,7 @@
 ---
 description: Implement a new feature using full TDD loop
 argument-hint: "<feature description>" [--strict|--standard|--relaxed] [--no-refactor] [--file <path>] [--plan|--skip-plan]
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, TodoWrite, AskUserQuestion, EnterPlanMode
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, TodoWrite, AskUserQuestion, EnterPlanMode, ExitPlanMode
 ---
 
 # TDD Feature Implementation

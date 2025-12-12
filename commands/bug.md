@@ -1,7 +1,7 @@
 ---
 description: Fix a bug with regression test first
 argument-hint: "<bug description>" [--strict|--standard|--relaxed] [--no-refactor] [--file <path>] [--plan|--skip-plan]
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, TodoWrite, AskUserQuestion, EnterPlanMode
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, TodoWrite, AskUserQuestion, EnterPlanMode, ExitPlanMode
 ---
 
 # TDD Bug Fix

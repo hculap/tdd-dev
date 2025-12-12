@@ -1,7 +1,7 @@
 ---
 description: Safe refactoring verified by existing tests
 argument-hint: "<target>" [--strict|--standard|--relaxed] [--file <path>] [--plan|--skip-plan]
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, TodoWrite, AskUserQuestion, EnterPlanMode
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, TodoWrite, AskUserQuestion, EnterPlanMode, ExitPlanMode
 ---
 
 # TDD Safe Refactor
